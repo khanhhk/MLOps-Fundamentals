@@ -1,0 +1,2 @@
+[servers]
+34.142.157.123 ansible_user=hoangkimkhanh1907 ansible_ssh_private_key_file=/home/dell/.ssh/id_rsa

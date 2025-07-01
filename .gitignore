@@ -1,0 +1,13 @@
+__pycache__/
+data/
+
+ansible/secrets/*
+
+app/.env
+app/.tmp/*
+app/create_data.py
+
+!terraform/main.tf 
+!terraform/variables.tf
+!terraform/README.md
+terraform/*

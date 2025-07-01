@@ -1,0 +1,4 @@
+image:
+  repository: hoangkimkhanh1907/fastapi-app
+  tag: "0.0.1"
+  pullPolicy: Always
