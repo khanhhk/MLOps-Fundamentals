@@ -17,8 +17,8 @@ def parse_args() -> argparse.Namespace:
 
 class SimilaritySearcher:
     def __init__(self, server_host, image_folder):
-        self.search_endpoint = server_host + '/search_image'
-        self.push_endpoint = server_host + '/push_image'
+        self.search_endpoint = server_host + '/search_image/'
+        self.push_endpoint = server_host + '/push_image/'
         self.image_dir = image_folder
 
     def search(self, image):
@@ -85,7 +85,7 @@ class SimilaritySearcher:
         image_buffer.seek(0)
         return image_buffer.getvalue()
 
-def main():
+def run():
     args = parse_args()
     searcher = SimilaritySearcher(server_host=Config.SERVER_HOST, image_folder=Config.DB_IMAGE_FOLDER)
     print(searcher.search_endpoint)
@@ -121,5 +121,7 @@ def main():
     # demo.queue()
     demo.launch(share=args.share)
 
+
+
 if __name__ == "__main__":
-    main()
+    run()

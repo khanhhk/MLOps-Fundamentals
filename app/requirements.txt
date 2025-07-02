@@ -9,4 +9,5 @@ google-cloud-storage==2.18.2
 python-multipart==0.0.9
 pillow==10.4.0
 redis==5.2.1
-gradio==4.44.1
+# gradio==4.44.1
+gradio==4.19.2

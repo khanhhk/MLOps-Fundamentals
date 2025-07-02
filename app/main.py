@@ -13,7 +13,7 @@ from loguru import logger
 from google.cloud import storage
 from google.oauth2 import service_account
 from config import Config
-from utils import get_index, search
+from utils import get_index, search, get_storage_client
 
 db = redis.StrictRedis(
     host=Config.REDIS_HOST,
@@ -22,27 +22,27 @@ db = redis.StrictRedis(
 )
 logger.info(f"Connected to Redis server {Config.REDIS_HOST}:{Config.REDIS_PORT}")
 
-INDEX_NAME = Config.INDEX_NAME
-index = get_index(INDEX_NAME)
-logger.info(f"Connect to index {INDEX_NAME} successfully")
+index = get_index(Config.INDEX_NAME)
+logger.info(f"Pinecone index: {Config.INDEX_NAME}")
 
-# Initialize GCS client
 GCS_BUCKET_NAME = Config.GCS_BUCKET_NAME
-# key_path = "dynamic-branch-441814-f1-45971c71ec3a.json"
-json_path = os.environ["GOOGLE_APPLICATION_CREDENTIALS"]
-credentials = service_account.Credentials.from_service_account_file(json_path)
-storage_client = storage.Client(credentials=credentials)
 try:
+    storage_client = get_storage_client()
     bucket = storage_client.get_bucket(GCS_BUCKET_NAME)
-    logger.info(f"Connected to GCS bucket {GCS_BUCKET_NAME} successfully")
-except storage.exceptions.NotFound:
-    logger.error(f"Bucket {GCS_BUCKET_NAME} not found in Google Cloud Storage.")
-    raise HTTPException(status_code=404, detail=f"Bucket {GCS_BUCKET_NAME} not found.")
+    if not bucket.exists():
+        logger.error(f"Bucket {GCS_BUCKET_NAME} not found in Google Cloud Storage.")
+        raise HTTPException(status_code=404, detail=f"Bucket {GCS_BUCKET_NAME} not found.")
+
+    logger.info(f"Connected to GCS bucket '{GCS_BUCKET_NAME}' successfully")
 except Exception as e:
-    logger.error(f"Error retrieving bucket {GCS_BUCKET_NAME}: {e}")
-    raise HTTPException(status_code=500, detail=f"Error retrieving bucket {GCS_BUCKET_NAME}: {e}")
+    logger.error(f"Error accessing GCS bucket '{GCS_BUCKET_NAME}': {e}")
+    raise HTTPException(status_code=500, detail=str(e))
 
 app = FastAPI()
+
+@app.get("/health_check/")
+def health_check():
+    return {"status": "OK!"}
 
 @app.post("/push_image/")
 async def push_image(file: UploadFile = File(...)):
@@ -106,10 +106,6 @@ async def push_image(file: UploadFile = File(...)):
     except Exception as e:
         logger.error(f"Error in pushing image: {e}")
         raise HTTPException(status_code=500, detail=f"Error in pushing image: {e}")
-
-@app.get("/health_check/")
-def health_check():
-    return {"status": "OK!"}
 
 @app.post("/search_image/")
 async def search_image(file: UploadFile = File(...)):
