@@ -3,11 +3,8 @@ import time
 import redis
 from pinecone import Pinecone, ServerlessSpec
 from loguru import logger
-# from dotenv import load_dotenv
 from config import Config
 
-# load_dotenv()
-# PINECONE_APIKEY = os.getenv("PINECONE_APIKEY")
 PINECONE_APIKEY = os.environ["PINECONE_APIKEY"]
 
 def get_index(index_name):
@@ -19,16 +16,18 @@ def get_index(index_name):
         pc.create_index(
             name=index_name,
             metric="cosine",
-            dimension=Config.INPUT_RESLUTION,
+            dimension=Config.INPUT_RESOLUTION,
             spec=ServerlessSpec(
-                cloud = "aws",
-                region = "us-east-1"
+                cloud = Config.PINECONE_CLOUD,
+                region = Config.PINECONE_REGION
             )
         )
         logger.info(f"Created Pinecone index: {index_name}")
     return pc.Index(index_name)
 
 def search(index, input_emb, top_k):
+    if not input_emb:
+        raise ValueError("Input embedding is empty")
     matching = index.query(vector=input_emb, top_k=top_k, include_values=True)[
         "matches"
     ]
