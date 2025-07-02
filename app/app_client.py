@@ -10,11 +10,6 @@ DESCRIPTION = """
 # Push an image or Find similar images
 """
 
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--share", action="store_true")
-    return parser.parse_args()
-
 class SimilaritySearcher:
     def __init__(self, server_host, image_folder):
         self.search_endpoint = server_host + '/search_image/'
@@ -85,10 +80,10 @@ class SimilaritySearcher:
         image_buffer.seek(0)
         return image_buffer.getvalue()
 
-def run():
-    args = parse_args()
-    searcher = SimilaritySearcher(server_host=Config.SERVER_HOST, image_folder=Config.DB_IMAGE_FOLDER)
-    print(searcher.search_endpoint)
+def create_demo():
+    searcher = SimilaritySearcher(
+        server_host=Config.SERVER_HOST, 
+        image_folder=Config.DB_IMAGE_FOLDER)
 
     with gr.Blocks() as demo:
         gr.Markdown(TITLE)
@@ -118,10 +113,4 @@ def run():
             ],
             outputs=[results],
         )
-    # demo.queue()
-    demo.launch(share=args.share)
-
-
-
-if __name__ == "__main__":
-    run()
+    return demo

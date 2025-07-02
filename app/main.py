@@ -1,44 +1,50 @@
-import uuid
-import time
-import datetime
-import redis
-import base64
-import json
-import os
+import threading
+import uuid, time, datetime, base64, json
 import numpy as np
+
+import redis
 from PIL import Image
-from io import BytesIO
-from fastapi import FastAPI, UploadFile, File, HTTPException
 from loguru import logger
-from google.cloud import storage
-from google.oauth2 import service_account
+from fastapi import FastAPI, UploadFile, File, HTTPException
+import gradio as gr
+from io import BytesIO
+
 from config import Config
 from utils import get_index, search, get_storage_client
+from app_client import create_demo
+from feature_cluster import FeatureExtraction
 
 db = redis.StrictRedis(
-    host=Config.REDIS_HOST,
-    port=Config.REDIS_PORT,
-    db=Config.REDIS_DB
-)
-logger.info(f"Connected to Redis server {Config.REDIS_HOST}:{Config.REDIS_PORT}")
+    host=Config.REDIS_HOST, 
+    port=Config.REDIS_PORT, 
+    db=Config.REDIS_DB)
+logger.info(f"Connected to Redis {Config.REDIS_HOST}:{Config.REDIS_PORT}")
 
 index = get_index(Config.INDEX_NAME)
 logger.info(f"Pinecone index: {Config.INDEX_NAME}")
 
-GCS_BUCKET_NAME = Config.GCS_BUCKET_NAME
+# GCS client
 try:
     storage_client = get_storage_client()
-    bucket = storage_client.get_bucket(GCS_BUCKET_NAME)
+    bucket = storage_client.get_bucket(Config.GCS_BUCKET_NAME)
     if not bucket.exists():
-        logger.error(f"Bucket {GCS_BUCKET_NAME} not found in Google Cloud Storage.")
-        raise HTTPException(status_code=404, detail=f"Bucket {GCS_BUCKET_NAME} not found.")
+        logger.error(f"Bucket {Config.GCS_BUCKET_NAME} not found in Google Cloud Storage.")
+        raise HTTPException(status_code=404, detail=f"Bucket {Config.GCS_BUCKET_NAME} not found.")
 
-    logger.info(f"Connected to GCS bucket '{GCS_BUCKET_NAME}' successfully")
+    logger.info(f"Connected to GCS bucket '{Config.GCS_BUCKET_NAME}' successfully")
 except Exception as e:
-    logger.error(f"Error accessing GCS bucket '{GCS_BUCKET_NAME}': {e}")
+    logger.error(f"Error accessing GCS bucket '{Config.GCS_BUCKET_NAME}': {e}")
     raise HTTPException(status_code=500, detail=str(e))
 
+
+# --- FastAPI app ---
 app = FastAPI()
+
+@app.on_event("startup")
+def start_background():
+    t = threading.Thread(target=FeatureExtraction().run, daemon=True)
+    t.start()
+    logger.info("FeatureExtraction thread started")
 
 @app.get("/health_check/")
 def health_check():
@@ -106,7 +112,7 @@ async def push_image(file: UploadFile = File(...)):
     except Exception as e:
         logger.error(f"Error in pushing image: {e}")
         raise HTTPException(status_code=500, detail=f"Error in pushing image: {e}")
-
+    
 @app.post("/search_image/")
 async def search_image(file: UploadFile = File(...)):
     try:
@@ -172,3 +178,16 @@ async def search_image(file: UploadFile = File(...)):
     except Exception as e:
         logger.error(f"Error in image search process: {e}")
         raise HTTPException(status_code=400, detail=f"Error in image search process: {e}")
+
+# args = parse_args()
+# demo = create_demo().launch(share=args.share)
+# app.mount("/", WSGIMiddleware(demo))
+
+demo = create_demo()
+
+app = gr.mount_gradio_app(app, demo, path="/")
+
+# --- chạy server ---
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("main:app", host="0.0.0.0", port=Config.PORT_EXPOSE)

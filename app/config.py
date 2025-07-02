@@ -21,13 +21,13 @@ class Config:
     GCS_BUCKET_NAME = "mlops1-project-bucket"
 
     # Config redis db
-    REDIS_HOST = "0.0.0.0"
+    REDIS_HOST = "127.0.0.1"
     REDIS_DB = 0
     REDIS_PORT = 6379
     REDIS_QUEUE = "extract_feature_queue"
     REQUEST_TIMEOUT = 10
     IMAGE_PREFIX = "image_"
-    SERVER_HOST = 'http://0.0.0.0:8005'
+    SERVER_HOST = f"http://{REDIS_HOST}:{PORT_EXPOSE}"
 
     # Config for gradio
     FILE_KEY = "file"

@@ -21,4 +21,3 @@ class VIT_MSN():
         with torch.no_grad():
             outputs = self.model(inputs).last_hidden_state[:, 0, :]
         return outputs.cpu().numpy()
-    

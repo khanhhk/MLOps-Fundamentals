@@ -78,7 +78,4 @@ class FeatureExtraction():
             verified_request.clear()
 
             time.sleep(Config.SERVER_SLEEP)
-
-if __name__ == "__main__":
-    runner = FeatureExtraction()
-    runner.run()
+            

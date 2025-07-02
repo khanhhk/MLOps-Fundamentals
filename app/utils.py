@@ -6,13 +6,6 @@ from loguru import logger
 from google.cloud import storage
 from google.oauth2 import service_account
 from config import Config
-from model import VIT_MSN
-import torch
-import json
-from types import SimpleNamespace
-import base64
-import numpy as np
-from PIL import Image
 
 PINECONE_APIKEY = os.environ["PINECONE_APIKEY"]
 
