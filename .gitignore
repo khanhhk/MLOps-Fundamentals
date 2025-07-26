@@ -1,4 +1,4 @@
-__pycache__/
+**/__pycache__
 data/
 
 ansible/secrets/*
@@ -11,3 +11,5 @@ app/create_data.py
 !terraform/variables.tf
 !terraform/README.md
 terraform/*
+
+**/.env

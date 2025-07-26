@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  vit-msn-service:
+    image: vit-msn-service 
+    container_name: vit-msn-container
+    ports:
+      - "5000:5000"
+  
+  ingesting-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ingesting-service
+    ports:
+      - "5001:5001"
+    env_file:
+      - .env
+    depends_on:
+      - vit-msn-service
+    volumes:
+      - /home/khanhhk/MLOPS/MLEK3/M1/mlek3-19072003-3fa2d6a59211.json:/secrets/gcp-key.json:ro
+    
+  
