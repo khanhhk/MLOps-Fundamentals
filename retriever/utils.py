@@ -1,20 +1,20 @@
 import os
-import time
-import redis
+import requests
 from pinecone import Pinecone, ServerlessSpec
 from loguru import logger
+from fastapi import HTTPException
 from google.cloud import storage
 from google.oauth2 import service_account
 from config import Config
-from model import VIT_MSN
-import torch
-import json
-from types import SimpleNamespace
-import base64
-import numpy as np
-from PIL import Image
 
 PINECONE_APIKEY = os.environ["PINECONE_APIKEY"]
+
+def get_storage_client():
+    json_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+    if json_path:
+        credentials = service_account.Credentials.from_service_account_file(json_path)
+        return storage.Client(credentials=credentials)
+    return storage.Client()
 
 def get_index(index_name):
     pc = Pinecone(api_key=PINECONE_APIKEY)
@@ -34,12 +34,19 @@ def get_index(index_name):
         logger.info(f"Created Pinecone index: {index_name}")
     return pc.Index(index_name)
 
-def get_storage_client():
-    json_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
-    if json_path:
-        credentials = service_account.Credentials.from_service_account_file(json_path)
-        return storage.Client(credentials=credentials)
-    return storage.Client()
+def get_feature_vector(image_bytes: bytes) -> list:
+    try:
+        logger.info(f"Calling embedding service at {Config.EMBEDDING_SERVICE_URL}")
+        response = requests.post(
+            url=Config.EMBEDDING_SERVICE_URL,
+            files={"file": ("image.jpg", image_bytes, "image/jpeg")}
+        )
+        response.raise_for_status()
+        feature = response.json()
+        return feature 
+    except Exception as e:
+        logger.error(f"Failed to get feature vector: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get feature vector from embedding service")
 
 def search(index, input_emb, top_k):
     if not input_emb:

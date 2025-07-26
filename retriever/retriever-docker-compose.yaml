@@ -8,13 +8,13 @@ services:
       - "5000:5000"
     networks:
       - mlops-net
-  ingesting-api:
+  retriever-api:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: ingesting-service
+    container_name: retriever-service
     ports:
-      - "5001:5001"
+      - "5002:5002"
     env_file:
       - .env
     depends_on:

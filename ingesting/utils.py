@@ -36,6 +36,7 @@ def get_index(index_name):
 
 def get_feature_vector(image_bytes: bytes) -> list:
     try:
+        logger.info(f"Calling embedding service at {Config.EMBEDDING_SERVICE_URL}")
         response = requests.post(
             url=Config.EMBEDDING_SERVICE_URL,
             files={"file": ("image.jpg", image_bytes, "image/jpeg")}
