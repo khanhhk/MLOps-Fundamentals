@@ -7,6 +7,6 @@ class Config:
     PINECONE_REGION = "us-central1"  
     # Config for GCS    
     GCS_BUCKET_NAME = "mlops1-project-bucket"
-    PUBSUB_TOPIC = "projects/mlops1-project/topics/mlops1-project-topic"
+    PUBSUB_TOPIC = "projects/mlek3-19072003/topics/mlops1-project-topic"
     # Config for embedding service
     EMBEDDING_SERVICE_URL = os.getenv("EMBEDDING_SERVICE_URL", "http://vit-msn-service:5000/embed")
